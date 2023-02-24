@@ -1,8 +1,7 @@
 require("dotenv").config();
 const { Bot, HttpError, GrammyError } = require("grammy");
 const { gfycat } = require("gfycat-api");
-const regex =
-  /(?:https?:\/\/)?(?:www\.)?(?:gfycat\.com)\/([a-zA-Z]+)(?:-[a-zA-Z]+)*/i;
+const regex = /(?:https?:\/\/)?(?:www\.)?(?:gfycat\.com)\/[^\s]+/gi;
 
 // Bot
 
@@ -31,24 +30,29 @@ bot.command("help", async (ctx) => {
 
 bot.on("msg", async (ctx) => {
   try {
+    console.log("Query received:", ctx.msg.text, "from", ctx.from.id);
     if (!regex.test(ctx.msg.text)) {
       await ctx.reply("*Send a valid Gfycat link.*", {
         parse_mode: "Markdown",
         reply_to_message_id: ctx.msg.message_id,
       });
     } else {
-      console.log("Query received:", ctx.msg.text, "from", ctx.from.id);
       const status = await ctx.reply(`*Downloading*`, {
         parse_mode: "Markdown",
       });
-      const id = ctx.msg.text.split("/").pop().split("-")[0];
-      const post = await gfycat.getPost(id);
-      const link = post.sources.find((obj) => obj.type === "mp4").url;
-      await ctx.replyWithVideo(link, {
-        reply_to_message_id: ctx.msg.message_id,
-        caption: `*${post.title}*`,
-        parse_mode: "Markdown",
-      });
+      const urls = ctx.msg.text.match(regex);
+      const urlsIndexed = urls.map((url, index) => `${index}: ${url}`);
+      console.log(urls);
+      for (let i = 0; i < urls.length; i++) {
+        const id = ctx.msg.text.split("/").pop().split("-")[0];
+        const post = await gfycat.getPost(id);
+        const link = post.sources.find((obj) => obj.type === "mp4").url;
+        await ctx.replyWithVideo(link, {
+          reply_to_message_id: ctx.msg.message_id,
+          caption: `[${post.title}](${urls})`,
+          parse_mode: "Markdown",
+        });
+      }
       setTimeout(async () => {
         bot.api.deleteMessage(ctx.from.id, status.message_id);
       }, 3000);
