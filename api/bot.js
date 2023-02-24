@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Bot, webhookCallback HttpError, GrammyError } = require("grammy");
+const { Bot, webhookCallback, HttpError, GrammyError } = require("grammy");
 const { gfycat } = require("gfycat-api");
 const regex =
   /(?:https?:\/\/)?(?:www\.)?(?:gfycat\.com)\/([a-zA-Z]+)(?:-[a-zA-Z]+)*/i;
